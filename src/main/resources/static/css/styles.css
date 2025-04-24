@@ -1,756 +1,260 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phishing Email Detector</title>
-    <style>
-        :root {
-            --primary-color: #3498db;
-            --danger-color: #e74c3c;
-            --warning-color: #f39c12;
-            --success-color: #2ecc71;
-            --neutral-color: #7f8c8d;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            background-color: #f5f5f5;
-            color: #333;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        header {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 1rem;
-            text-align: center;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 2rem;
-        }
-
-        .main-content {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-
-        .input-form {
-            flex: 1;
-            min-width: 300px;
-            background-color: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        .results {
-            flex: 1;
-            min-width: 300px;
-            background-color: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            display: none;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        input[type="text"],
-        input[type="email"],
-        textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-            box-sizing: border-box;
-        }
-
-        textarea {
-            min-height: 150px;
-            resize: vertical;
-        }
-
-        .attachment-container {
-            margin-top: 10px;
-        }
-
-        .attachment-input {
-            display: flex;
-            margin-bottom: 5px;
-        }
-
-        .attachment-input input {
-            flex: 1;
-            margin-right: 10px;
-        }
-
-        button {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s;
-        }
-
-        button:hover {
-            background-color: #2980b9;
-        }
-
-        .btn-danger {
-            background-color: var(--danger-color);
-        }
-
-        .btn-danger:hover {
-            background-color: #c0392b;
-        }
-
-        .score-display {
-            text-align: center;
-            margin: 20px 0;
-        }
-
-        .score-gauge {
-            width: 200px;
-            height: 100px;
-            margin: 0 auto;
-            position: relative;
-            overflow: hidden;
-            border-top-left-radius: 100px;
-            border-top-right-radius: 100px;
-            background-color: #eee;
-        }
-
-        .gauge-fill {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            background-color: var(--success-color);
-            transition: height 0.5s;
-        }
-
-        .score-text {
-            position: absolute;
-            bottom: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        .score-label {
-            margin-top: 35px;
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        .assessment {
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 5px;
-            font-weight: bold;
-        }
-
-        .safe {
-            background-color: rgba(46, 204, 113, 0.2);
-            color: #27ae60;
-        }
-
-        .suspicious {
-            background-color: rgba(243, 156, 18, 0.2);
-            color: #d35400;
-        }
-
-        .moderate {
-            background-color: rgba(230, 126, 34, 0.2);
-            color: #d35400;
-        }
-
-        .high {
-            background-color: rgba(231, 76, 60, 0.2);
-            color: #c0392b;
-        }
-
-        .details-section {
-            margin-top: 20px;
-        }
-
-        .details-section h3 {
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 10px;
-        }
-
-        .suspicious-element {
-            margin-bottom: 15px;
-            padding: 10px;
-            background-color: rgba(52, 152, 219, 0.1);
-            border-left: 4px solid var(--primary-color);
-            border-radius: 3px;
-        }
-
-        .suspicious-element h4 {
-            margin-top: 0;
-            margin-bottom: 10px;
-        }
-
-        .suspicious-links,
-        .suspicious-attachments {
-            list-style-type: none;
-            padding-left: 0;
-        }
-
-        .suspicious-links li,
-        .suspicious-attachments li {
-            padding: 5px 0;
-            border-bottom: 1px dotted #ddd;
-        }
-
-        .warning-icon {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            background-color: var(--danger-color);
-            border-radius: 50%;
-            color: white;
-            text-align: center;
-            line-height: 20px;
-            margin-right: 5px;
-        }
-
-        .safety-tips {
-            list-style-type: decimal;
-            padding-left: 20px;
-        }
-
-        .safety-tips li {
-            margin-bottom: 10px;
-        }
-
-        footer {
-            text-align: center;
-            margin-top: 30px;
-            padding: 10px;
-            color: #888;
-            font-size: 0.9rem;
-        }
-
-        @media (max-width: 768px) {
-            .main-content {
-                flex-direction: column;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <header>
-            <h1>Phishing Email Detector</h1>
-            <p>Analyze emails for potential phishing attempts</p>
-        </header>
-
-        <div class="main-content">
-            <div class="input-form" id="input-form">
-                <h2>Email Details</h2>
-                <div class="form-group">
-                    <label for="sender">Sender Email Address:</label>
-                    <input type="text" id="sender" placeholder="name@example.com or Company Name <name@example.com>">
-                </div>
-
-                <div class="form-group">
-                    <label for="subject">Email Subject:</label>
-                    <input type="text" id="subject" placeholder="Enter the email subject line">
-                </div>
-
-                <div class="form-group">
-                    <label for="body">Email Body:</label>
-                    <textarea id="body" placeholder="Paste the full email content here..."></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label>Attachments:</label>
-                    <div id="attachments-container" class="attachment-container">
-                        <div class="attachment-input">
-                            <input type="text" placeholder="attachment1.pdf" class="attachment-name">
-                            <button type="button" class="btn-danger remove-attachment" style="display: none;">X</button>
-                        </div>
-                    </div>
-                    <button type="button" id="add-attachment" style="margin-top: 10px;">Add Attachment</button>
-                </div>
-
-                <button type="button" id="analyze-btn">Analyze Email</button>
-            </div>
-
-            <div class="results" id="results">
-                <h2>Analysis Results</h2>
-
-                <div class="score-display">
-                    <div class="score-gauge">
-                        <div class="gauge-fill" id="gauge-fill"></div>
-                        <div class="score-text" id="score-text">0</div>
-                    </div>
-                    <div class="score-label">Phishing Probability Score</div>
-                </div>
-
-                <div class="assessment" id="assessment"></div>
-
-                <div class="details-section">
-                    <h3>Email Details</h3>
-                    <p><strong>Sender:</strong> <span id="result-sender"></span></p>
-                    <p><strong>Subject:</strong> <span id="result-subject"></span></p>
-                    <p><strong>Body Length:</strong> <span id="result-body-length"></span> characters</p>
-                    <p><strong>Links Found:</strong> <span id="result-links"></span></p>
-                    <p><strong>Attachments Found:</strong> <span id="result-attachments"></span></p>
-                </div>
-
-                <div class="details-section" id="suspicious-elements">
-                    <h3>Suspicious Elements</h3>
-                    <!-- Suspicious elements will be added here dynamically -->
-                </div>
-
-                <div class="details-section">
-                    <h3>Safety Recommendations</h3>
-                    <ul class="safety-tips">
-                        <li>Verify the sender's email address carefully.</li>
-                        <li>Hover over links before clicking to see where they really go.</li>
-                        <li>Never provide sensitive information in response to an email.</li>
-                        <li>Contact the supposed sender through official channels if unsure.</li>
-                        <li>Check for grammar and spelling mistakes, which are common in phishing emails.</li>
-                    </ul>
-                </div>
-
-                <button type="button" id="back-btn">Analyze Another Email</button>
-            </div>
-        </div>
-
-        <footer>
-            <p>Phishing Email Detector - Developed by Taylor Waldo, James Bostick, Bennett Marsee, Caitlyn Pillsbury, Caleb Walton</p>
-            <p>CSC-331-002 - April 2025</p>
-        </footer>
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // DOM elements
-            const addAttachmentBtn = document.getElementById('add-attachment');
-            const attachmentsContainer = document.getElementById('attachments-container');
-            const analyzeBtn = document.getElementById('analyze-btn');
-            const backBtn = document.getElementById('back-btn');
-            const inputForm = document.getElementById('input-form');
-            const resultsSection = document.getElementById('results');
-
-            // Add attachment field
-            addAttachmentBtn.addEventListener('click', function() {
-                const attachmentInputs = document.querySelectorAll('.attachment-input');
-                const lastInput = attachmentInputs[attachmentInputs.length - 1];
-                const lastInputValue = lastInput.querySelector('.attachment-name').value.trim();
-
-                // If the last input is empty, don't add a new one
-                if (lastInputValue === '') {
-                    return;
-                }
-
-                // Show remove button for all existing attachment inputs
-                document.querySelectorAll('.remove-attachment').forEach(btn => {
-                    btn.style.display = 'block';
-                });
-
-                // Create new attachment input
-                const newAttachmentInput = document.createElement('div');
-                newAttachmentInput.className = 'attachment-input';
-                newAttachmentInput.innerHTML = `
-                    <input type="text" placeholder="attachment2.pdf" class="attachment-name">
-                    <button type="button" class="btn-danger remove-attachment">X</button>
-                `;
-
-                attachmentsContainer.appendChild(newAttachmentInput);
-
-                // Add event listener to remove button
-                const removeBtn = newAttachmentInput.querySelector('.remove-attachment');
-                removeBtn.addEventListener('click', function() {
-                    newAttachmentInput.remove();
-
-                    // If only one attachment input is left, hide its remove button
-                    const remainingInputs = document.querySelectorAll('.attachment-input');
-                    if (remainingInputs.length === 1) {
-                        remainingInputs[0].querySelector('.remove-attachment').style.display = 'none';
-                    }
-                });
-            });
-
-            // Remove attachment field (initial attachment input)
-            document.addEventListener('click', function(e) {
-                if (e.target && e.target.classList.contains('remove-attachment')) {
-                    e.target.parentElement.remove();
-
-                    // If only one attachment input is left, hide its remove button
-                    const remainingInputs = document.querySelectorAll('.attachment-input');
-                    if (remainingInputs.length === 1) {
-                        remainingInputs[0].querySelector('.remove-attachment').style.display = 'none';
-                    }
-                }
-            });
-
-            // Analyze email
-            analyzeBtn.addEventListener('click', function() {
-                // Get input values
-                const sender = document.getElementById('sender').value.trim();
-                const subject = document.getElementById('subject').value.trim();
-                const body = document.getElementById('body').value.trim();
-
-                // Validate required fields
-                if (sender === '' || subject === '' || body === '') {
-                    alert('Please fill in all required fields (sender, subject, and body).');
-                    return;
-                }
-
-                // Get attachments
-                const attachmentInputs = document.querySelectorAll('.attachment-name');
-                const attachments = [];
-
-                attachmentInputs.forEach(input => {
-                    const attachment = input.value.trim();
-                    if (attachment !== '') {
-                        attachments.push(attachment);
-                    }
-                });
-
-                // In a real implementation, this is where you would send the data to your Java backend
-                // For now, we'll simulate a response
-
-                // Analyze email (simulation)
-                analyzeEmail({
-                    sender: sender,
-                    subject: subject,
-                    body: body,
-                    attachments: attachments
-                });
-            });
-
-            // Go back to input form
-            backBtn.addEventListener('click', function() {
-                inputForm.style.display = 'block';
-                resultsSection.style.display = 'none';
-            });
-
-            // Simulate analyzing an email (in real implementation, this would call your Java backend)
-            function analyzeEmail(email) {
-                // This is where you would send the email data to your Java backend
-                // For demonstration purposes, we'll create a simulated response
-
-                // Extract URLs from body using a simple regex
-                const urlRegex = /(https?:\/\/[^\s]+)/g;
-                const links = email.body.match(urlRegex) || [];
-
-                // Calculate a simulated phishing score (in a real implementation, this would come from your backend)
-                let phishingScore = 0;
-
-                // Check for suspicious keywords in subject
-                const suspiciousSubjectKeywords = ['urgent', 'action required', 'account', 'verify', 'password', 'suspicious'];
-                for (const keyword of suspiciousSubjectKeywords) {
-                    if (email.subject.toLowerCase().includes(keyword)) {
-                        phishingScore += 10;
-                        break;
-                    }
-                }
-
-                // Check for suspicious keywords in body
-                const suspiciousBodyKeywords = ['verify your account', 'update your information', 'click here', 'urgent action', 'password expired'];
-                for (const keyword of suspiciousBodyKeywords) {
-                    if (email.body.toLowerCase().includes(keyword)) {
-                        phishingScore += 15;
-                    }
-                }
-
-                // Check for suspicious sender domain
-                if (!email.sender.includes('@') ||
-                    email.sender.includes('verify') ||
-                    email.sender.includes('secure') ||
-                    email.sender.includes('support')) {
-                    phishingScore += 20;
-                }
-
-                // Check for unsecured links (http instead of https)
-                let hasUnsecuredLinks = false;
-                links.forEach(link => {
-                    if (link.startsWith('http:')) {
-                        hasUnsecuredLinks = true;
-                        phishingScore += 15;
-                    }
-                });
-
-                // Check for suspicious attachments
-                const highRiskExtensions = ['.exe', '.bat', '.cmd', '.com', '.msi', '.scr', '.js', '.vbs', '.ps1'];
-                const mediumRiskExtensions = ['.zip', '.rar', '.7z', '.tar', '.gz', '.doc', '.xls', '.ppt', '.pdf'];
-
-                let hasDangerousAttachments = false;
-                email.attachments.forEach(attachment => {
-                    const lowerAttachment = attachment.toLowerCase();
-
-                    // Check for high-risk extensions
-                    for (const ext of highRiskExtensions) {
-                        if (lowerAttachment.endsWith(ext)) {
-                            hasDangerousAttachments = true;
-                            phishingScore += 25;
-                            break;
-                        }
-                    }
-
-                    // Check for medium-risk extensions
-                    for (const ext of mediumRiskExtensions) {
-                        if (lowerAttachment.endsWith(ext)) {
-                            phishingScore += 10;
-                            break;
-                        }
-                    }
-
-                    // Check for double extensions
-                    const lastDotIndex = lowerAttachment.lastIndexOf('.');
-                    if (lastDotIndex > 0) {
-                        const nameWithoutExtension = lowerAttachment.substring(0, lastDotIndex);
-                        if (nameWithoutExtension.includes('.')) {
-                            phishingScore += 15;
-                        }
-                    }
-                });
-
-                // Cap score at 100
-                phishingScore = Math.min(phishingScore, 100);
-
-                // Display results
-                displayResults({
-                    sender: email.sender,
-                    subject: email.subject,
-                    bodyLength: email.body.length,
-                    links: links,
-                    attachments: email.attachments,
-                    phishingScore: phishingScore,
-                    hasUnsecuredLinks: hasUnsecuredLinks,
-                    hasDangerousAttachments: hasDangerousAttachments
-                });
-            }
-
-            // Display the analysis results
-            function displayResults(results) {
-                // Update basic information
-                document.getElementById('result-sender').textContent = results.sender;
-                document.getElementById('result-subject').textContent = results.subject;
-                document.getElementById('result-body-length').textContent = results.bodyLength;
-                document.getElementById('result-links').textContent = results.links.length;
-                document.getElementById('result-attachments').textContent = results.attachments.length;
-
-                // Update score gauge
-                const gaugeFill = document.getElementById('gauge-fill');
-                const scoreText = document.getElementById('score-text');
-
-                scoreText.textContent = results.phishingScore;
-                const fillHeight = (results.phishingScore / 100) * 100;
-                gaugeFill.style.height = `${fillHeight}%`;
-
-                // Set gauge color based on score
-                if (results.phishingScore < 15) {
-                    gaugeFill.style.backgroundColor = 'var(--success-color)';
-                } else if (results.phishingScore < 40) {
-                    gaugeFill.style.backgroundColor = 'var(--warning-color)';
-                } else if (results.phishingScore < 60) {
-                    gaugeFill.style.backgroundColor = 'var(--warning-color)';
-                } else {
-                    gaugeFill.style.backgroundColor = 'var(--danger-color)';
-                }
-
-                // Update assessment
-                const assessment = document.getElementById('assessment');
-
-                if (results.phishingScore < 15) {
-                    assessment.className = 'assessment safe';
-                    assessment.textContent = 'ASSESSMENT: This email appears to be SAFE. No significant phishing indicators detected.';
-                } else if (results.phishingScore < 40) {
-                    assessment.className = 'assessment suspicious';
-                    assessment.textContent = 'ASSESSMENT: This email has SOME SUSPICIOUS elements but is likely legitimate. Proceed with caution.';
-                } else if (results.phishingScore < 60) {
-                    assessment.className = 'assessment moderate';
-                    assessment.textContent = 'ASSESSMENT: This email is MODERATELY SUSPICIOUS and may be a phishing attempt. Verify before taking any action.';
-                } else {
-                    assessment.className = 'assessment high';
-                    assessment.textContent = 'ASSESSMENT: This email is HIGHLY SUSPICIOUS and likely a phishing attempt. Do not click links, download attachments, or respond with personal information.';
-                }
-
-                // Update suspicious elements
-                const suspiciousElements = document.getElementById('suspicious-elements');
-                suspiciousElements.innerHTML = '<h3>Suspicious Elements</h3>';
-
-                // Check if there are any suspicious elements to report
-                if (results.phishingScore > 0) {
-                    // Check for sender issues
-                    if (!results.sender.includes('@') ||
-                        results.sender.includes('verify') ||
-                        results.sender.includes('secure') ||
-                        results.sender.includes('support')) {
-
-                        const senderElement = document.createElement('div');
-                        senderElement.className = 'suspicious-element';
-                        senderElement.innerHTML = `
-                            <h4>Sender issues detected (score: 20)</h4>
-                            <p>The sender email address contains suspicious patterns or domains.</p>
-                        `;
-                        suspiciousElements.appendChild(senderElement);
-                    }
-
-                    // Check for suspicious subject
-                    const suspiciousSubjectKeywords = ['urgent', 'action required', 'account', 'verify', 'password', 'suspicious'];
-                    for (const keyword of suspiciousSubjectKeywords) {
-                        if (results.subject.toLowerCase().includes(keyword)) {
-                            const subjectElement = document.createElement('div');
-                            subjectElement.className = 'suspicious-element';
-                            subjectElement.innerHTML = `
-                                <h4>Subject line contains suspicious language (score: 10)</h4>
-                                <p>The subject line contains words or phrases commonly used in phishing attempts.</p>
-                            `;
-                            suspiciousElements.appendChild(subjectElement);
-                            break;
-                        }
-                    }
-
-                    // Check for suspicious links
-                    if (results.links.length > 0) {
-                        const linksElement = document.createElement('div');
-                        linksElement.className = 'suspicious-element';
-
-                        let linksHeading = "";
-                        if (results.hasUnsecuredLinks) {
-                            linksHeading = '<h4>Suspicious links detected (score: 15)</h4>';
-                        } else {
-                            linksHeading = '<h4>Links found (low suspicion)</h4>';
-                        }
-
-                        let linksHtml = `
-                            ${linksHeading}
-                            <ul class="suspicious-links">
-                        `;
-
-                        results.links.forEach(link => {
-                            linksHtml += `<li>${link}`;
-
-                            if (link.startsWith('http:')) {
-                                linksHtml += ' <span class="warning-icon">!</span> Uses unsecured HTTP protocol';
-                            }
-
-                            linksHtml += '</li>';
-                        });
-
-                        linksHtml += '</ul>';
-                        linksElement.innerHTML = linksHtml;
-                        suspiciousElements.appendChild(linksElement);
-                    }
-
-                    // Check for suspicious content
-                    const suspiciousBodyKeywords = ['verify your account', 'update your information', 'click here', 'urgent action', 'password expired'];
-                    for (const keyword of suspiciousBodyKeywords) {
-                        if (results.bodyLength > 0 && results.subject.toLowerCase().includes(keyword)) {
-                            const contentElement = document.createElement('div');
-                            contentElement.className = 'suspicious-element';
-                            contentElement.innerHTML = `
-                                <h4>Content contains suspicious language or requests (score: 15)</h4>
-                                <p>The email content contains phrases commonly used in phishing attempts.</p>
-                                <p>Contains suspicious phrase: "${keyword}"</p>
-                            `;
-                            suspiciousElements.appendChild(contentElement);
-                            break;
-                        }
-                    }
-
-                    // Check for suspicious attachments
-                    if (results.attachments.length > 0) {
-                        const attachmentsElement = document.createElement('div');
-                        attachmentsElement.className = 'suspicious-element';
-
-                        let attachmentsHeading = "";
-                        if (results.hasDangerousAttachments) {
-                            attachmentsHeading = '<h4>Potentially dangerous attachments detected (score: 25)</h4>';
-                        } else {
-                            attachmentsHeading = '<h4>Attachments found (potential risk)</h4>';
-                        }
-
-                        let attachmentsHtml = `
-                            ${attachmentsHeading}
-                            <ul class="suspicious-attachments">
-                        `;
-
-                        const highRiskExtensions = ['.exe', '.bat', '.cmd', '.com', '.msi', '.scr', '.js', '.vbs', '.ps1'];
-                        const mediumRiskExtensions = ['.zip', '.rar', '.7z', '.tar', '.gz', '.doc', '.xls', '.ppt', '.pdf'];
-
-                        results.attachments.forEach(attachment => {
-                            const lowerAttachment = attachment.toLowerCase();
-                            attachmentsHtml += `<li>${attachment}`;
-
-                            // Check for high-risk extensions
-                            for (const ext of highRiskExtensions) {
-                                if (lowerAttachment.endsWith(ext)) {
-                                    attachmentsHtml += ' <span class="warning-icon">!</span> HIGH RISK: Contains executable or script extension';
-                                    break;
-                                }
-                            }
-
-                            // Check for medium-risk extensions
-                            for (const ext of mediumRiskExtensions) {
-                                if (lowerAttachment.endsWith(ext)) {
-                                    attachmentsHtml += ' <span class="warning-icon">!</span> MEDIUM RISK: Contains potentially risky file type';
-                                    break;
-                                }
-                            }
-
-                            // Check for double extensions
-                            const lastDotIndex = lowerAttachment.lastIndexOf('.');
-                            if (lastDotIndex > 0) {
-                                const nameWithoutExtension = lowerAttachment.substring(0, lastDotIndex);
-                                if (nameWithoutExtension.includes('.')) {
-                                    attachmentsHtml += ' <span class="warning-icon">!</span> SUSPICIOUS: Contains multiple file extensions (possible disguised file)';
-                                }
-                            }
-
-                            attachmentsHtml += '</li>';
-                        });
-
-                        attachmentsHtml += '</ul>';
-                        attachmentsElement.innerHTML = attachmentsHtml;
-                        suspiciousElements.appendChild(attachmentsElement);
-                    }
-                } else {
-                    const noSuspiciousElement = document.createElement('p');
-                    noSuspiciousElement.textContent = 'No suspicious elements detected.';
-                    suspiciousElements.appendChild(noSuspiciousElement);
-                }
-
-                // Show results section and hide input form
-                inputForm.style.display = 'none';
-                resultsSection.style.display = 'block';
-            }
-        });
-    </script>
-</body>
-</html>
+:root {
+    --primary-color: #3498db;
+    --danger-color: #e74c3c;
+    --warning-color: #f39c12;
+    --success-color: #2ecc71;
+    --neutral-color: #7f8c8d;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 1rem;
+    text-align: center;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+h1 {
+    margin: 0;
+    font-size: 2rem;
+}
+
+.main-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.input-form {
+    flex: 1;
+    min-width: 300px;
+    background-color: white;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.results {
+    flex: 1;
+    min-width: 300px;
+    background-color: white;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    display: none;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+input[type="text"],
+input[type="email"],
+textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+textarea {
+    min-height: 150px;
+    resize: vertical;
+}
+
+.attachment-container {
+    margin-top: 10px;
+}
+
+.attachment-input {
+    display: flex;
+    margin-bottom: 5px;
+}
+
+.attachment-input input {
+    flex: 1;
+    margin-right: 10px;
+}
+
+button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+
+.btn-danger {
+    background-color: var(--danger-color);
+}
+
+.btn-danger:hover {
+    background-color: #c0392b;
+}
+
+.score-display {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.score-gauge {
+    width: 200px;
+    height: 100px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    border-top-left-radius: 100px;
+    border-top-right-radius: 100px;
+    background-color: #eee;
+}
+
+.gauge-fill {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background-color: var(--success-color);
+    transition: height 0.5s;
+}
+
+.score-text {
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.score-label {
+    margin-top: 35px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.assessment {
+    padding: 15px;
+    margin: 20px 0;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.safe {
+    background-color: rgba(46, 204, 113, 0.2);
+    color: #27ae60;
+}
+
+.suspicious {
+    background-color: rgba(243, 156, 18, 0.2);
+    color: #d35400;
+}
+
+.moderate {
+    background-color: rgba(230, 126, 34, 0.2);
+    color: #d35400;
+}
+
+.high {
+    background-color: rgba(231, 76, 60, 0.2);
+    color: #c0392b;
+}
+
+.details-section {
+    margin-top: 20px;
+}
+
+.details-section h3 {
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+}
+
+.suspicious-element {
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: rgba(52, 152, 219, 0.1);
+    border-left: 4px solid var(--primary-color);
+    border-radius: 3px;
+}
+
+.suspicious-element h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.suspicious-links,
+.suspicious-attachments {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.suspicious-links li,
+.suspicious-attachments li {
+    padding: 5px 0;
+    border-bottom: 1px dotted #ddd;
+}
+
+.warning-icon {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background-color: var(--danger-color);
+    border-radius: 50%;
+    color: white;
+    text-align: center;
+    line-height: 20px;
+    margin-right: 5px;
+}
+
+.safety-tips {
+    list-style-type: decimal;
+    padding-left: 20px;
+}
+
+.safety-tips li {
+    margin-bottom: 10px;
+}
+
+footer {
+    text-align: center;
+    margin-top: 30px;
+    padding: 10px;
+    color: #888;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        flex-direction: column;
+    }
+}

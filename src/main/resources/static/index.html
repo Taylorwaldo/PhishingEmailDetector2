@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phishing Email Detector</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Phishing Email Detector</h1>
+    <p>Analyze emails for potential phishing attempts</p>
+  </header>
+
+  <div class="main-content">
+    <div class="input-form" id="input-form">
+      <h2>Email Details</h2>
+      <div class="form-group">
+        <label for="sender">Sender Email Address:</label>
+        <input type="text" id="sender" placeholder="name@example.com or Company Name <name@example.com>">
+      </div>
+
+      <div class="form-group">
+        <label for="subject">Email Subject:</label>
+        <input type="text" id="subject" placeholder="Enter the email subject line">
+      </div>
+
+      <div class="form-group">
+        <label for="body">Email Body:</label>
+        <textarea id="body" placeholder="Paste the full email content here..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Attachments:</label>
+        <div id="attachments-container" class="attachment-container">
+          <div class="attachment-input">
+            <input type="text" placeholder="attachment1.pdf" class="attachment-name">
+            <button type="button" class="btn-danger remove-attachment" style="display: none;">X</button>
+          </div>
+        </div>
+        <button type="button" id="add-attachment" style="margin-top: 10px;">Add Attachment</button>
+      </div>
+
+      <button type="button" id="analyze-btn">Analyze Email</button>
+    </div>
+
+    <div class="results" id="results">
+      <h2>Analysis Results</h2>
+
+      <div class="score-display">
+        <div class="score-gauge">
+          <div class="gauge-fill" id="gauge-fill"></div>
+          <div class="score-text" id="score-text">0</div>
+        </div>
+        <div class="score-label">Phishing Probability Score</div>
+      </div>
+
+      <div class="assessment" id="assessment"></div>
+
+      <div class="details-section">
+        <h3>Email Details</h3>
+        <p><strong>Sender:</strong> <span id="result-sender"></span></p>
+        <p><strong>Subject:</strong> <span id="result-subject"></span></p>
+        <p><strong>Body Length:</strong> <span id="result-body-length"></span> characters</p>
+        <p><strong>Links Found:</strong> <span id="result-links"></span></p>
+        <p><strong>Attachments Found:</strong> <span id="result-attachments"></span></p>
+      </div>
+
+      <div class="details-section" id="suspicious-elements">
+        <h3>Suspicious Elements</h3>
+        <!-- Suspicious elements will be added here dynamically -->
+      </div>
+
+      <div class="details-section">
+        <h3>Safety Recommendations</h3>
+        <ul class="safety-tips">
+          <li>Verify the sender's email address carefully.</li>
+          <li>Hover over links before clicking to see where they really go.</li>
+          <li>Never provide sensitive information in response to an email.</li>
+          <li>Contact the supposed sender through official channels if unsure.</li>
+          <li>Check for grammar and spelling mistakes, which are common in phishing emails.</li>
+        </ul>
+      </div>
+
+      <button type="button" id="back-btn">Analyze Another Email</button>
+    </div>
+  </div>
+
+  <footer>
+    <p>Phishing Email Detector - Developed by Taylor Waldo, James Bostick, Bennett Marsee, Caitlyn Pillsbury, Caleb Walton</p>
+    <p>CSC-331-002 - Spring 2025</p>
+  </footer>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>

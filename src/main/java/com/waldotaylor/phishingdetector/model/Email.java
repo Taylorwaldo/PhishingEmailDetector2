@@ -40,7 +40,7 @@ public class Email {
      * @param sender
      */
 
-    public void getSender(String sender) {
+    public void setSender(String sender) {
         this.sender = sender; // Needs the new value as input
     }
 

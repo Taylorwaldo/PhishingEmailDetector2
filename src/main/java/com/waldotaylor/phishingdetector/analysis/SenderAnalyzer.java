@@ -7,7 +7,6 @@ import com.waldotaylor.phishingdetector.model.Email;
 import com.waldotaylor.phishingdetector.util.ResourceLoader;
 
 import java.util.List;
-import java.util.Arrays;
 import java.util.regex.Pattern;
 
 /*
